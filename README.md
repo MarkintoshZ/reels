@@ -1,4 +1,5 @@
-# Reels — An experimental web framework running on top of the [Lunatic VM](https://github.com/lunatic-solutions/lunatic)
+# Reels
+An experimental web framework running on top of the [Lunatic VM](https://github.com/lunatic-solutions/lunatic)
 
 ### Roadmap
 - Web framework
@@ -12,4 +13,4 @@
   - [ ] TLS/SSL support
 
 ### License
-MIT
+- MIT
