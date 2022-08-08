@@ -33,7 +33,7 @@ impl Server {
                 Process::spawn(tcp_stream, |tcp_stream, _: Mailbox<()>| {
                     println!("Process started");
                     let mut buf_reader = BufReader::with_capacity(4198, tcp_stream.clone());
-                    let mut buf_writer = BufWriter::new(tcp_stream.clone());
+                    let mut buf_writer = BufWriter::new(tcp_stream);
                     while let Some(request) = HttpRequest::parse(&mut buf_reader).unwrap() {
                         println!("{:#?}", request);
                         let res = match &request.url[..] {

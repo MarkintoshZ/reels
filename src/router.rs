@@ -1,5 +1,6 @@
 use http::{response, Method, Request, Response};
 
+#[derive(Default)]
 pub struct Router {
     routes: Vec<Route>,
     middlewares: Vec<Middleware>,
@@ -7,19 +8,24 @@ pub struct Router {
 
 impl Router {
     pub fn new() -> Router {
-        Router {
-            routes: Vec::new(),
-            middlewares: Vec::new(),
-        }
+        Router::default()
     }
 
-    pub fn with(mut self, route: Route) -> Self {
+    /// Mount a service or another router on the relative path
+    pub fn mount(mut self, route: Route) -> Self {
         self.routes.push(route);
         self
     }
 
-    pub fn with_middleware(mut self, middleware: Middleware) -> Self {
-        self.middlewares.push(middleware);
+    /// Attach a middleware to the router
+    pub fn attach(mut self, route: Route) -> Self {
+        // TODO
+        self
+    }
+
+    /// Register fallback handlers
+    pub fn register(mut self, route: Route) -> Self {
+        // TODO
         self
     }
 

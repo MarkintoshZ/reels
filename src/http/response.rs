@@ -2,7 +2,7 @@ use std::{collections::HashMap, io::Write};
 
 use super::{status::StatusCode, version::Version};
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct HttpResponse {
     /// The response's status
     pub status: StatusCode,
@@ -28,7 +28,7 @@ impl HttpResponse {
             write!(stream, "{}: {}\r\n", key, value).unwrap();
         });
         write!(stream, "\r\n")?;
-        stream.write(&self.body)?;
+        stream.write_all(&self.body)?;
         write!(stream, "\r\n")?;
         stream.flush()?;
         Ok(())

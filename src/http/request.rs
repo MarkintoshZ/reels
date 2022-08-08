@@ -2,6 +2,7 @@ use httparse::Request;
 use lunatic::net;
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader, Read};
+use url::Url;
 
 use super::version::Version;
 
@@ -12,7 +13,7 @@ pub struct HttpRequest {
     /// The request's method
     pub method: Method,
     /// The request's url
-    pub url: String,
+    pub url: Url,
     /// The request's version
     pub version: Version,
     /// The request's headers
@@ -62,6 +63,7 @@ impl Method {
 #[derive(Debug)]
 pub enum RequestParseError {
     SocketClosed,
+    InvalidUrl,
     InvalidMethod,
     InvalidHttpRequest,
 }
@@ -105,7 +107,12 @@ impl HttpRequest {
         });
 
         let method: Method = req.method.unwrap().try_into().unwrap();
-        let url = req.path.unwrap().to_owned();
+        // Parse url string into type URL and only take the path portion
+        let url: Url = req
+            .path
+            .map(|path| Url::parse(&format!("http://host/{}", path)))
+            .unwrap()
+            .map_err(|_e| RequestParseError::InvalidUrl)?;
         let version: Version = req.version.unwrap().try_into().unwrap();
         let headers: HashMap<String, String> = headers
             .into_iter()
