@@ -1,11 +1,10 @@
 use httparse::Request;
 use lunatic::net;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader, Read};
 use url::Url;
 
-use super::version::Version;
+use super::{Method, Version};
 
 const MAX_HEADER_LENGTH: usize = 32;
 
@@ -21,44 +20,6 @@ pub struct HttpRequest {
     pub headers: HashMap<String, String>,
     /// HTTP body
     pub body: Option<Vec<u8>>,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
-pub enum Method {
-    GET,
-    PUT,
-    HEAD,
-    POST,
-    PATCH,
-    TRACE,
-    DELETE,
-    CONNECT,
-    OPTIONS,
-}
-
-impl TryInto<Method> for &str {
-    type Error = ();
-
-    fn try_into(self) -> Result<Method, ()> {
-        Method::parse(self)
-    }
-}
-
-impl Method {
-    fn parse(s: &str) -> Result<Self, ()> {
-        match s {
-            "GET" => Ok(Method::GET),
-            "PUT" => Ok(Method::PUT),
-            "HEAD" => Ok(Method::HEAD),
-            "POST" => Ok(Method::POST),
-            "PATCH" => Ok(Method::PATCH),
-            "TRACE" => Ok(Method::TRACE),
-            "Delete" => Ok(Method::DELETE),
-            "CONNECT" => Ok(Method::CONNECT),
-            "OPTIONS" => Ok(Method::OPTIONS),
-            _ => Err(()),
-        }
-    }
 }
 
 #[derive(Debug)]

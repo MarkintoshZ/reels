@@ -1,6 +1,9 @@
 use crate::http::{response::HttpResponseBuilder, HttpRequest, HttpResponse, Method};
+use crate::router::UrlPattern;
 use serde::{Deserialize, Serialize};
 use std::mem;
+
+use super::url_pattern::InvalidUrlPattern;
 
 #[derive(Default, Serialize, Deserialize, Clone)]
 pub struct Router {
@@ -15,9 +18,15 @@ impl Router {
     }
 
     /// Mount a service or another router on the relative path
-    pub fn mount(mut self, route: Route) -> Self {
+    pub fn mount(
+        mut self,
+        method: Method,
+        url_pattern: &str,
+        handler: Handler,
+    ) -> Result<Self, InvalidUrlPattern> {
+        let route = Route::new(method, url_pattern, handler)?;
         self.routes.push(route);
-        self
+        Ok(self)
     }
 
     /// Register fallback handlers
@@ -44,21 +53,26 @@ impl Router {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Route {
     method: Method,
-    uri_prefix: String,
+    url_pattern: UrlPattern,
     handler: HandlerPtr,
 }
 
 impl Route {
-    pub fn new(method: Method, uri_prefix: &str, handler: Handler) -> Self {
-        Self {
+    pub fn new(
+        method: Method,
+        url_pattern: &str,
+        handler: Handler,
+    ) -> Result<Self, InvalidUrlPattern> {
+        Ok(Self {
             method,
-            uri_prefix: uri_prefix.to_string(),
+            url_pattern: url_pattern.try_into()?,
             handler: handler as *const () as usize,
-        }
+        })
     }
 
     pub fn match_uri(&self, request: &HttpRequest) -> bool {
-        request.url.path().starts_with(&self.uri_prefix) && request.method == self.method
+        // TODO
+        self.url_pattern.match_url(&request.url).is_some() && request.method == self.method
     }
 
     pub fn invoke(
@@ -74,9 +88,8 @@ impl Route {
     }
 }
 
+/// Handler function
+pub type Handler = fn(HttpRequest, HttpResponseBuilder) -> HttpResponseBuilder;
+
 /// A pointer to the handler function
 type HandlerPtr = usize;
-/// Handler function
-type Handler = fn(HttpRequest, HttpResponseBuilder) -> HttpResponseBuilder;
-
-pub struct Middleware {}

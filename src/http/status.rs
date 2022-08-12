@@ -1,7 +1,7 @@
 use std::fmt;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct StatusCode(pub u16);
+pub struct StatusCode(u16);
 
 impl StatusCode {
     pub const OK: StatusCode = StatusCode(200);
@@ -36,6 +36,30 @@ impl Default for StatusCode {
 
 impl fmt::Display for StatusCode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} OK", self.0)
+        match self.0 {
+            200 => f.write_str("200 OK"),
+            201 => f.write_str("201 CREATED"),
+            202 => f.write_str("202 ACCEPTED"),
+            206 => f.write_str("206 PARTIAL_CONTENT"),
+            300 => f.write_str("300 MULTIPLE_CHOICES"),
+            301 => f.write_str("301 MOVED_PERMANENTLY"),
+            302 => f.write_str("302 FOUND"),
+            400 => f.write_str("400 BAD_REQUEST"),
+            401 => f.write_str("400 UNAUTHORIZED"),
+            403 => f.write_str("403 FORBIDDEN"),
+            404 => f.write_str("404 NOT_FOUND"),
+            405 => f.write_str("405 METHOD_NOT_ALLOWED"),
+            406 => f.write_str("406 NOT_ACCEPTABLE"),
+            411 => f.write_str("411 LENGTH_REQUIRED"),
+            418 => f.write_str("418 IM_A_TEAPOT"),
+            426 => f.write_str("426 UPGRADE_REQUIRED"),
+            429 => f.write_str("429 TOO_MANY_REQUESTS"),
+            500 => f.write_str("500 INTERNAL_SERVER_ERROR"),
+            501 => f.write_str("501 NOT_IMPLEMENTED"),
+            502 => f.write_str("502 BAD_GATEWAY"),
+            503 => f.write_str("503 SERVICE_UNAVAILABLE"),
+            504 => f.write_str("504 GATEWAY_TIMEOUT"),
+            _ => Err(fmt::Error),
+        }
     }
 }
