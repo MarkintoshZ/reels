@@ -92,11 +92,26 @@ impl HttpRequest {
 
         req.parse(&header_buffer).unwrap();
 
-        let content_length = req
+        let method: Method = req.method.unwrap().try_into().unwrap();
+        let version: Version = req.version.unwrap().try_into().unwrap();
+        let headers: HashMap<String, String> = req
             .headers
-            .iter()
-            .find(|h| h.name.eq_ignore_ascii_case("content-length"))
-            .and_then(|h| std::str::from_utf8(h.value).ok())
+            .into_iter()
+            .map(|h| {
+                (
+                    h.name.to_ascii_lowercase().to_owned(),
+                    std::str::from_utf8(h.value).unwrap().to_owned(),
+                )
+            })
+            .collect();
+
+        let host = headers.get("host").unwrap();
+        let path = req.path.unwrap();
+        // Parse url string into type URL and only take the path portion
+        let url: Url = Url::parse(&format!("http://{}{}", host, path)).unwrap();
+
+        let content_length = headers
+            .get("content-length")
             .and_then(|s| s.parse::<usize>().ok());
 
         let body = content_length.map(|len| {
@@ -105,24 +120,6 @@ impl HttpRequest {
             buf_reader.read_exact(&mut body_buf).unwrap();
             body_buf
         });
-
-        let method: Method = req.method.unwrap().try_into().unwrap();
-        // Parse url string into type URL and only take the path portion
-        let url: Url = req
-            .path
-            .map(|path| Url::parse(&format!("http://host/{}", path)))
-            .unwrap()
-            .map_err(|_e| RequestParseError::InvalidUrl)?;
-        let version: Version = req.version.unwrap().try_into().unwrap();
-        let headers: HashMap<String, String> = headers
-            .into_iter()
-            .map(|h| {
-                (
-                    h.name.to_owned(),
-                    std::str::from_utf8(h.value).unwrap().to_owned(),
-                )
-            })
-            .collect();
 
         Ok(Some(Self {
             method,
