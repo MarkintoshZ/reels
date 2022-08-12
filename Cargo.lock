@@ -180,6 +180,7 @@ dependencies = [
  "httparse",
  "lunatic",
  "reels-macros",
+ "serde",
  "url",
 ]
 

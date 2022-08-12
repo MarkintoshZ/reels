@@ -1,9 +1,12 @@
-use http::{response, Method, Request, Response};
+use crate::http::{response::HttpResponseBuilder, HttpRequest, HttpResponse, Method};
+use serde::{Deserialize, Serialize};
+use std::mem;
 
-#[derive(Default)]
+#[derive(Default, Serialize, Deserialize, Clone)]
 pub struct Router {
     routes: Vec<Route>,
-    middlewares: Vec<Middleware>,
+    // middlewares: Vec<Middleware>,
+    fallback_handler: Option<HandlerPtr>,
 }
 
 impl Router {
@@ -17,49 +20,63 @@ impl Router {
         self
     }
 
-    /// Attach a middleware to the router
-    pub fn attach(mut self, route: Route) -> Self {
-        // TODO
-        self
-    }
-
     /// Register fallback handlers
-    pub fn register(mut self, route: Route) -> Self {
-        // TODO
+    pub fn fallback(mut self, handler: HandlerPtr) -> Self {
+        self.fallback_handler = Some(handler);
         self
     }
 
-    pub fn route(&self, req: Request<()>) -> Response<()> {
-        let mut response = Response::builder();
-        (self.routes[0].handler)(req, &mut response);
-        response.body(()).unwrap()
+    /// Route the request to the right handler based on the request uri prefix and method
+    pub fn route(&self, req: HttpRequest) -> HttpResponse {
+        let matched_route = self
+            .routes
+            .iter()
+            .find(|route| route.match_uri(&req))
+            .unwrap();
+
+        // TODO: use fallback handler
+
+        let response = HttpResponse::builder();
+        matched_route.invoke(req, response).finalize()
     }
 }
 
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Route {
     method: Method,
-    uri_pattern: String,
-    handler: Handler,
+    uri_prefix: String,
+    handler: HandlerPtr,
 }
 
 impl Route {
-    pub fn new(method: Method, uri_pattern: String, handler: Handler) -> Self {
+    pub fn new(method: Method, uri_prefix: &str, handler: Handler) -> Self {
         Self {
             method,
-            uri_pattern,
-            handler,
+            uri_prefix: uri_prefix.to_string(),
+            handler: handler as *const () as usize,
         }
     }
 
-    pub fn match_uri(&self, uri: &str) -> bool {
-        todo!()
+    pub fn match_uri(&self, request: &HttpRequest) -> bool {
+        request.url.path().starts_with(&self.uri_prefix) && request.method == self.method
     }
 
-    pub fn invoke(&self, uri: &str) {
-        todo!()
+    pub fn invoke(
+        &self,
+        request: HttpRequest,
+        response: HttpResponseBuilder,
+    ) -> HttpResponseBuilder {
+        let handler = unsafe {
+            let pointer = self.handler as *const ();
+            mem::transmute::<*const (), Handler>(pointer)
+        };
+        handler(request, response)
     }
 }
 
-type Handler = fn(Request<()>, &mut response::Builder);
+/// A pointer to the handler function
+type HandlerPtr = usize;
+/// Handler function
+type Handler = fn(HttpRequest, HttpResponseBuilder) -> HttpResponseBuilder;
 
 pub struct Middleware {}

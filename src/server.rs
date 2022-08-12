@@ -2,7 +2,7 @@ use lunatic::{net, Mailbox, Process};
 use std::io::{BufReader, BufWriter};
 use std::net::SocketAddr;
 
-use crate::http::{request::HttpRequest, response::HttpResponse, status::StatusCode};
+use crate::http::HttpRequest;
 use crate::router::Router;
 
 pub struct Server {
@@ -30,35 +30,31 @@ impl Server {
             while let Ok((tcp_stream, _peer)) = listener.accept() {
                 println!("Accepted connection");
                 // Handle connections in a new process
-                Process::spawn(tcp_stream, |tcp_stream, _: Mailbox<()>| {
-                    println!("Process started");
-                    let mut buf_reader = BufReader::with_capacity(4198, tcp_stream.clone());
-                    let mut buf_writer = BufWriter::new(tcp_stream);
-                    while let Some(request) = HttpRequest::parse(&mut buf_reader).unwrap() {
-                        println!("{}", request.url);
-                        let res = match &request.url.path()[..] {
-                            "/" => HttpResponse::builder()
-                                .header(
-                                    "content-type".to_owned(),
-                                    "text/html; charset=utf-8".to_owned(),
-                                )
-                                .body("Hello world!".to_owned())
-                                .finalize(),
-                            _ => HttpResponse::builder()
-                                .status(StatusCode::NOT_FOUND)
-                                .header(
-                                    "content-type".to_owned(),
-                                    "text/html; charset=utf-8".to_owned(),
-                                )
-                                .body("Oops... Looks like you are lost".to_owned())
-                                .finalize(),
-                        };
-                        println!("{:#?}", res);
-                        res.write(&mut buf_writer).unwrap();
-                        println!("Response written");
-                    }
-                    println!("Socket closed");
-                });
+                Process::spawn(
+                    (tcp_stream, self.router.clone()),
+                    |(tcp_stream, router), _: Mailbox<()>| {
+                        println!("Process started");
+                        let mut buf_reader = BufReader::with_capacity(4198, tcp_stream.clone());
+                        let mut buf_writer = BufWriter::new(tcp_stream);
+                        while let Some(request) = HttpRequest::parse(&mut buf_reader).unwrap() {
+                            println!("{}", request.url);
+                            println!(
+                                "{:?}",
+                                request
+                                    .url
+                                    .path_segments()
+                                    .unwrap()
+                                    .collect::<Vec<&str>>()
+                                    .join("/")
+                            );
+                            let response = router.route(request);
+                            println!("{:#?}", &response);
+                            response.write(&mut buf_writer).unwrap();
+                            println!("Response written");
+                        }
+                        println!("Socket closed");
+                    },
+                );
             }
         }
     }

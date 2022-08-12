@@ -1,5 +1,6 @@
 use httparse::Request;
 use lunatic::net;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader, Read};
 use url::Url;
@@ -22,7 +23,7 @@ pub struct HttpRequest {
     pub body: Option<Vec<u8>>,
 }
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub enum Method {
     GET,
     PUT,
