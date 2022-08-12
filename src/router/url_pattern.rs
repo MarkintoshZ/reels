@@ -68,17 +68,17 @@ impl UrlPattern {
         Ok(UrlPattern { pattern: patterns })
     }
 
-    pub fn match_url<'a>(&self, url: &'a Url) -> Option<Vec<SegmentPatternValue>> {
+    pub fn match_url<'a>(&self, url: &'a Url) -> Option<Vec<SegmentPatternValue<'a>>> {
         let segments = url.path_segments()?;
         self.match_iter(segments)
     }
 
-    pub fn match_str<'a>(&self, path: &'a str) -> Option<Vec<SegmentPatternValue>> {
+    pub fn match_str<'a>(&self, path: &'a str) -> Option<Vec<SegmentPatternValue<'a>>> {
         let segments = path.split('/').skip(1);
         self.match_iter(segments)
     }
 
-    fn match_iter<'a, I>(&self, mut segments: I) -> Option<Vec<SegmentPatternValue>>
+    fn match_iter<'a, I>(&self, mut segments: I) -> Option<Vec<SegmentPatternValue<'a>>>
     where
         I: Iterator<Item = &'a str>,
     {
@@ -95,10 +95,10 @@ impl UrlPattern {
                 }
                 SegmentPattern::Wildcard(_) => {
                     let segment = segments.next()?;
-                    matched_values.push(SegmentPatternValue::Wildcard(segment.to_owned()));
+                    matched_values.push(SegmentPatternValue::Wildcard(segment));
                 }
                 SegmentPattern::WildcardKleene(_) => {
-                    let segments = segments.map(|s| s.to_owned()).collect();
+                    let segments = segments.map(|s| s).collect();
                     matched_values.push(SegmentPatternValue::WildcardKleene(segments));
                     return Some(matched_values);
                 }
@@ -123,9 +123,9 @@ impl TryFrom<&str> for UrlPattern {
 }
 
 #[derive(Debug)]
-pub enum SegmentPatternValue {
-    Wildcard(String),
-    WildcardKleene(Vec<String>),
+pub enum SegmentPatternValue<'a> {
+    Wildcard(&'a str),
+    WildcardKleene(Vec<&'a str>),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
