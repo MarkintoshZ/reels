@@ -35,8 +35,8 @@ impl Server {
                     let mut buf_reader = BufReader::with_capacity(4198, tcp_stream.clone());
                     let mut buf_writer = BufWriter::new(tcp_stream);
                     while let Some(request) = HttpRequest::parse(&mut buf_reader).unwrap() {
-                        println!("{:#?}", request);
-                        let res = match &request.url[..] {
+                        println!("{}", request.url);
+                        let res = match &request.url.path()[..] {
                             "/" => HttpResponse::builder()
                                 .header(
                                     "content-type".to_owned(),
