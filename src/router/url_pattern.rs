@@ -34,6 +34,8 @@ impl fmt::Display for InvalidUrlPattern {
 
 impl error::Error for InvalidUrlPattern {}
 
+pub type PathCapture<'a> = Vec<SegmentPatternValue<'a>>;
+
 /// Url Pattern for routing
 ///
 /// - fixed path
@@ -207,7 +209,7 @@ mod tests {
         assert!(pat.match_str("/a/b/c/d").is_none());
         let values = pat.match_str("/a/b/c").unwrap();
         if let [SegmentPatternValue::Wildcard(capture)] = &values[..] {
-            assert_eq!(capture, "c");
+            assert_eq!(*capture, "c");
         } else {
             panic!("Invalid value");
         }
@@ -216,7 +218,7 @@ mod tests {
         assert!(pat.match_str("/a/b").is_none());
         let values = pat.match_str("/a/b/c").unwrap();
         if let [SegmentPatternValue::Wildcard(capture)] = &values[..] {
-            assert_eq!(capture, "b");
+            assert_eq!(*capture, "b");
         } else {
             panic!("Invalid value");
         }
@@ -225,7 +227,7 @@ mod tests {
         assert!(pat.match_str("//b/c").is_some());
         let values = pat.match_str("/a/b/c").unwrap();
         if let [SegmentPatternValue::Wildcard(capture)] = &values[..] {
-            assert_eq!(capture, "a");
+            assert_eq!(*capture, "a");
         } else {
             panic!("Invalid value");
         }
@@ -235,9 +237,9 @@ mod tests {
         if let [SegmentPatternValue::Wildcard(cap1), SegmentPatternValue::Wildcard(cap2), SegmentPatternValue::Wildcard(cap3)] =
             &values[..]
         {
-            assert_eq!(cap1, "a");
-            assert_eq!(cap2, "b");
-            assert_eq!(cap3, "c");
+            assert_eq!(*cap1, "a");
+            assert_eq!(*cap2, "b");
+            assert_eq!(*cap3, "c");
         } else {
             panic!("Invalid value");
         }

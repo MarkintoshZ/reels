@@ -1,5 +1,5 @@
 use crate::http::{response::HttpResponseBuilder, HttpRequest, HttpResponse, Method};
-use crate::router::UrlPattern;
+use crate::router::{PathCapture, UrlPattern};
 use serde::{Deserialize, Serialize};
 use std::mem;
 
@@ -37,16 +37,13 @@ impl Router {
 
     /// Route the request to the right handler based on the request uri prefix and method
     pub fn route(&self, req: HttpRequest) -> HttpResponse {
-        let matched_route = self
-            .routes
-            .iter()
-            .find(|route| route.match_uri(&req))
-            .unwrap();
-
-        // TODO: use fallback handler
-
         let response = HttpResponse::builder();
-        matched_route.invoke(req, response).finalize()
+        for route in &self.routes {
+            if let Some(captures) = route.match_uri(&req) {
+                return route.invoke(captures, &req, response).finalize();
+            }
+        }
+        response.finalize()
     }
 }
 
@@ -70,26 +67,31 @@ impl Route {
         })
     }
 
-    pub fn match_uri(&self, request: &HttpRequest) -> bool {
+    pub fn match_uri<'a>(&self, request: &'a HttpRequest) -> Option<PathCapture<'a>> {
         // TODO
-        self.url_pattern.match_url(&request.url).is_some() && request.method == self.method
+        if request.method != self.method {
+            None
+        } else {
+            self.url_pattern.match_url(&request.url)
+        }
     }
 
-    pub fn invoke(
+    pub fn invoke<'a>(
         &self,
-        request: HttpRequest,
+        path_capture: PathCapture,
+        request: &HttpRequest,
         response: HttpResponseBuilder,
     ) -> HttpResponseBuilder {
         let handler = unsafe {
             let pointer = self.handler as *const ();
             mem::transmute::<*const (), Handler>(pointer)
         };
-        handler(request, response)
+        handler(path_capture, &request, response)
     }
 }
 
 /// Handler function
-pub type Handler = fn(HttpRequest, HttpResponseBuilder) -> HttpResponseBuilder;
+pub type Handler = fn(PathCapture, &HttpRequest, HttpResponseBuilder) -> HttpResponseBuilder;
 
 /// A pointer to the handler function
 type HandlerPtr = usize;

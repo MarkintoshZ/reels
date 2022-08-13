@@ -1,11 +1,11 @@
 use reels::{
     http::{HttpRequest, HttpResponseBuilder, Method, StatusCode},
-    router::Router,
+    router::{PathCapture, Router, SegmentPatternValue},
     server::Server,
 };
 use std::error::Error;
 
-fn index(_req: HttpRequest, resp: HttpResponseBuilder) -> HttpResponseBuilder {
+fn index(_: PathCapture, _req: &HttpRequest, resp: HttpResponseBuilder) -> HttpResponseBuilder {
     resp.header(
         "content-type".to_owned(),
         "text/html; charset=utf-8".to_owned(),
@@ -13,16 +13,23 @@ fn index(_req: HttpRequest, resp: HttpResponseBuilder) -> HttpResponseBuilder {
     .body("Hello world!".to_owned())
 }
 
-fn user(req: HttpRequest, resp: HttpResponseBuilder) -> HttpResponseBuilder {
-    let name = req.url.path_segments().unwrap().last().unwrap();
-    resp.header(
-        "content-type".to_owned(),
-        "text/html; charset=utf-8".to_owned(),
-    )
-    .body(format!("<h1>Hi there, {}!</h1>", name).to_owned())
+fn user(
+    capture: PathCapture,
+    _req: &HttpRequest,
+    resp: HttpResponseBuilder,
+) -> HttpResponseBuilder {
+    if let [SegmentPatternValue::Wildcard(name)] = capture[..] {
+        resp.header(
+            "content-type".to_owned(),
+            "text/html; charset=utf-8".to_owned(),
+        )
+        .body(format!("<h1>Hi there, {}!</h1>", name).to_owned())
+    } else {
+        unreachable!();
+    }
 }
 
-fn fallback(_req: HttpRequest, resp: HttpResponseBuilder) -> HttpResponseBuilder {
+fn fallback(_: PathCapture, _req: &HttpRequest, resp: HttpResponseBuilder) -> HttpResponseBuilder {
     resp.status(StatusCode::NOT_FOUND)
         .header(
             "content-type".to_owned(),

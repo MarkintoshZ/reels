@@ -3,7 +3,7 @@ An experimental web framework running on top of the [Lunatic VM](https://github.
 
 ### Roadmap
 - Web framework
-  - [ ] Router support
+  - [x] Router support
   - [ ] Middleware
   - [ ] Route macros
   - [ ] Route type guards
