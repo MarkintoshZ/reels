@@ -1,4 +1,4 @@
-use crate::http::{response::HttpResponseBuilder, HttpRequest, HttpResponse, Method};
+use crate::http::{HttpRequest, HttpResponse, Method};
 use crate::router::{PathCapture, UrlPattern};
 use serde::{Deserialize, Serialize};
 use std::mem;
@@ -7,7 +7,7 @@ use super::url_pattern::InvalidUrlPattern;
 
 #[derive(Default, Serialize, Deserialize, Clone)]
 pub struct Router {
-    routes: Vec<Route>,
+    routes: Vec<DefaultRoute>,
     // middlewares: Vec<Middleware>,
     fallback_handler: Option<HandlerPtr>,
 }
@@ -24,7 +24,7 @@ impl Router {
         url_pattern: &str,
         handler: Handler,
     ) -> Result<Self, InvalidUrlPattern> {
-        let route = Route::new(method, url_pattern, handler)?;
+        let route = DefaultRoute::new(method, url_pattern, handler)?;
         self.routes.push(route);
         Ok(self)
     }
@@ -37,29 +37,31 @@ impl Router {
 
     /// Route the request to the right handler based on the request uri prefix and method
     pub fn route(&self, req: HttpRequest) -> HttpResponse {
-        let response = HttpResponse::builder();
         for route in &self.routes {
             if let Some(captures) = route.match_uri(&req) {
-                return route.invoke(captures, &req, response).finalize();
+                return route.invoke(captures, &req);
             }
         }
-        response.finalize()
+        // TODO: Use fallback
+        HttpResponse::builder().finalize()
     }
 }
 
+pub trait Route: Sized {
+    fn new(method: Method, url_pattern: &str, handler: Handler) -> Result<Self, InvalidUrlPattern>;
+    fn match_uri<'a>(&self, request: &'a HttpRequest) -> Option<PathCapture<'a>>;
+    fn invoke<'a>(&self, path_capture: PathCapture, request: &HttpRequest) -> HttpResponse;
+}
+
 #[derive(Serialize, Deserialize, Clone)]
-pub struct Route {
+pub struct DefaultRoute {
     method: Method,
     url_pattern: UrlPattern,
     handler: HandlerPtr,
 }
 
-impl Route {
-    pub fn new(
-        method: Method,
-        url_pattern: &str,
-        handler: Handler,
-    ) -> Result<Self, InvalidUrlPattern> {
+impl Route for DefaultRoute {
+    fn new(method: Method, url_pattern: &str, handler: Handler) -> Result<Self, InvalidUrlPattern> {
         Ok(Self {
             method,
             url_pattern: url_pattern.try_into()?,
@@ -67,7 +69,7 @@ impl Route {
         })
     }
 
-    pub fn match_uri<'a>(&self, request: &'a HttpRequest) -> Option<PathCapture<'a>> {
+    fn match_uri<'a>(&self, request: &'a HttpRequest) -> Option<PathCapture<'a>> {
         // TODO
         if request.method != self.method {
             None
@@ -76,22 +78,17 @@ impl Route {
         }
     }
 
-    pub fn invoke<'a>(
-        &self,
-        path_capture: PathCapture,
-        request: &HttpRequest,
-        response: HttpResponseBuilder,
-    ) -> HttpResponseBuilder {
+    fn invoke<'a>(&self, path_capture: PathCapture, request: &HttpRequest) -> HttpResponse {
         let handler = unsafe {
             let pointer = self.handler as *const ();
             mem::transmute::<*const (), Handler>(pointer)
         };
-        handler(path_capture, &request, response)
+        handler(path_capture, request)
     }
 }
 
 /// Handler function
-pub type Handler = fn(PathCapture, &HttpRequest, HttpResponseBuilder) -> HttpResponseBuilder;
+pub type Handler = fn(PathCapture, &HttpRequest) -> HttpResponse;
 
 /// A pointer to the handler function
 type HandlerPtr = usize;

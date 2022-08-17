@@ -1,41 +1,43 @@
 use reels::{
-    http::{HttpRequest, HttpResponseBuilder, Method, StatusCode},
+    http::{HttpRequest, HttpResponse, Method, StatusCode},
     router::{PathCapture, Router, SegmentPatternValue},
     server::Server,
 };
 use std::error::Error;
 
-fn index(_: PathCapture, _req: &HttpRequest, resp: HttpResponseBuilder) -> HttpResponseBuilder {
-    resp.header(
-        "content-type".to_owned(),
-        "text/html; charset=utf-8".to_owned(),
-    )
-    .body("Hello world!".to_owned())
-}
-
-fn user(
-    capture: PathCapture,
-    _req: &HttpRequest,
-    resp: HttpResponseBuilder,
-) -> HttpResponseBuilder {
-    if let [SegmentPatternValue::Wildcard(name)] = capture[..] {
-        resp.header(
+fn index(_: PathCapture, _req: &HttpRequest) -> HttpResponse {
+    HttpResponse::builder()
+        .header(
             "content-type".to_owned(),
             "text/html; charset=utf-8".to_owned(),
         )
-        .body(format!("<h1>Hi there, {}!</h1>", name).to_owned())
+        .body("Hello world!".to_owned())
+        .finalize()
+}
+
+fn user(capture: PathCapture, _req: &HttpRequest) -> HttpResponse {
+    if let [SegmentPatternValue::Wildcard(name)] = capture[..] {
+        HttpResponse::builder()
+            .header(
+                "content-type".to_owned(),
+                "text/html; charset=utf-8".to_owned(),
+            )
+            .body(format!("<h1>Hi there, {}!</h1>", name).to_owned())
+            .finalize()
     } else {
         unreachable!();
     }
 }
 
-fn fallback(_: PathCapture, _req: &HttpRequest, resp: HttpResponseBuilder) -> HttpResponseBuilder {
-    resp.status(StatusCode::NOT_FOUND)
+fn fallback(_: PathCapture, _req: &HttpRequest) -> HttpResponse {
+    HttpResponse::builder()
+        .status(StatusCode::NOT_FOUND)
         .header(
             "content-type".to_owned(),
             "text/html; charset=utf-8".to_owned(),
         )
         .body("<h1>404 Not found</h1><p>Looks like you are lost</p>".to_owned())
+        .finalize()
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
