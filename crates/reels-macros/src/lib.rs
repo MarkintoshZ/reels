@@ -47,11 +47,6 @@ impl Parse for Args {
     }
 }
 
-fn token_stream_with_error(mut tokens: TokenStream, error: syn::Error) -> TokenStream {
-    tokens.extend(TokenStream::from(error.into_compile_error()));
-    tokens
-}
-
 fn expand(args: Args, func: ItemFn) -> TokenStream {
     let attrs = &func.attrs;
     let vis = &func.vis;
@@ -64,11 +59,23 @@ fn expand(args: Args, func: ItemFn) -> TokenStream {
             _ => unreachable!(),
         })
         .map(|ty| {
-            // todo parse string to support other types
-            quote! { match captures.next() {
-                Some(SegmentPatternValue::Wildcard(v)) => v,
-                _ => return Err(reels_core::router::SegmentTypeMissmatch),
-            } }
+            let ty_str = quote! { #ty }.to_string();
+            if ty_str == "& str" {
+                quote! {
+                    match captures.next() {
+                        Some(SegmentPatternValue::Wildcard(v)) => v,
+                        _ => return Err(reels_core::router::SegmentTypeMissmatch),
+                    }
+                }
+            } else {
+                quote! {
+                    match captures.next() {
+                        Some(SegmentPatternValue::Wildcard(v)) =>
+                            v.parse::<#ty>().map_err(|_| reels_core::router::SegmentTypeMissmatch)?,
+                        _ => return Err(reels_core::router::SegmentTypeMissmatch),
+                    }
+                }
+            }
         })
         .collect();
 
@@ -88,4 +95,9 @@ fn expand(args: Args, func: ItemFn) -> TokenStream {
     };
     println!("{}", output);
     output.into()
+}
+
+fn token_stream_with_error(mut tokens: TokenStream, error: syn::Error) -> TokenStream {
+    tokens.extend(TokenStream::from(error.into_compile_error()));
+    tokens
 }

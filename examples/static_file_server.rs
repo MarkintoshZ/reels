@@ -17,6 +17,17 @@ fn index() -> HttpResponse {
         .finalize()
 }
 
+#[route("/users/<uid>")]
+fn user_uid(uid: u32) -> HttpResponse {
+    HttpResponse::builder()
+        .header(
+            "content-type".to_owned(),
+            "text/html; charset=utf-8".to_owned(),
+        )
+        .body(format!("<h1>Hi there, uid of {}!</h1>", uid).to_owned())
+        .finalize()
+}
+
 #[route("/users/<name>")]
 fn user(name: &str) -> HttpResponse {
     HttpResponse::builder()
@@ -41,6 +52,7 @@ fn fallback(_: PathCapture, _req: &HttpRequest) -> HttpResponse {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let router = Router::new()
+        .mount(Method::GET, "/users/<uid>", user_uid)?
         .mount(Method::GET, "/users/<name>", user)?
         .mount(Method::GET, "/", index)?;
     // .mount(Method::GET, "/<rest..>", fallback)?;
