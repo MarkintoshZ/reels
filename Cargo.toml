@@ -10,16 +10,13 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-lunatic = "^0.10.3"
-http = "0.2.8"
-httparse = "1.3"
-unicode-xid = "0.2.3"
-urlencoding = "2.1"
-url = "2.2"
-serde = { version = "1.0", features = ["derive"] }
-reels-macros = { version = "^0.0.1", path = "./reels-macros" }
+reels-core = { version = "^0.0.1", path = "./crates/reels-core" }
+reels-macros = { version = "^0.0.1", path = "./crates/reels-macros" }
+reels-url-pattern = { version = "^0.0.1", path = "./crates/reels-url-pattern" }
 
 [workspace]
 members = [
-  "reels-macros",
+  "crates/reels-core",
+  "crates/reels-macros",
+  "crates/reels-url-pattern",
 ]

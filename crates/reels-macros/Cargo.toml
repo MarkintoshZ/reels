@@ -1,0 +1,19 @@
+[package]
+name = "reels-macros"
+version = "0.0.1"
+edition = "2021"
+authors = ["Mark Zhang <markintoshzzz@gmail.com>"]
+description = "Helper macros for reels"
+license = "MIT"
+readme = "README.md"
+
+[dependencies]
+reels-url-pattern = { version = "^0.0.1", path = "../reels-url-pattern" }
+quote = "1"
+syn = { version = "1", features = ["full", "extra-traits"] }
+proc-macro2 = "1.0"
+syn-mid = "0.5"
+
+[lib]
+proc-macro = true
+

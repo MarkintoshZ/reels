@@ -3,7 +3,7 @@ use crate::router::{PathCapture, UrlPattern};
 use serde::{Deserialize, Serialize};
 use std::mem;
 
-use super::url_pattern::InvalidUrlPattern;
+use reels_url_pattern::InvalidUrlPattern;
 
 #[derive(Default, Serialize, Deserialize, Clone)]
 pub struct Router {
@@ -39,7 +39,10 @@ impl Router {
     pub fn route(&self, req: HttpRequest) -> HttpResponse {
         for route in &self.routes {
             if let Some(captures) = route.match_uri(&req) {
-                return route.invoke(captures, &req);
+                match route.invoke(captures, &req) {
+                    Ok(response) => return response,
+                    Err(SegmentTypeMissmatch) => continue,
+                }
             }
         }
         // TODO: Use fallback
@@ -50,7 +53,11 @@ impl Router {
 pub trait Route: Sized {
     fn new(method: Method, url_pattern: &str, handler: Handler) -> Result<Self, InvalidUrlPattern>;
     fn match_uri<'a>(&self, request: &'a HttpRequest) -> Option<PathCapture<'a>>;
-    fn invoke<'a>(&self, path_capture: PathCapture, request: &HttpRequest) -> HttpResponse;
+    fn invoke<'a>(
+        &self,
+        path_capture: PathCapture,
+        request: &HttpRequest,
+    ) -> Result<HttpResponse, SegmentTypeMissmatch>;
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -78,7 +85,11 @@ impl Route for DefaultRoute {
         }
     }
 
-    fn invoke<'a>(&self, path_capture: PathCapture, request: &HttpRequest) -> HttpResponse {
+    fn invoke<'a>(
+        &self,
+        path_capture: PathCapture,
+        request: &HttpRequest,
+    ) -> Result<HttpResponse, SegmentTypeMissmatch> {
         let handler = unsafe {
             let pointer = self.handler as *const ();
             mem::transmute::<*const (), Handler>(pointer)
@@ -88,7 +99,10 @@ impl Route for DefaultRoute {
 }
 
 /// Handler function
-pub type Handler = fn(PathCapture, &HttpRequest) -> HttpResponse;
+pub type Handler = fn(PathCapture, &HttpRequest) -> Result<HttpResponse, SegmentTypeMissmatch>;
+
+#[derive(Debug)]
+pub struct SegmentTypeMissmatch;
 
 /// A pointer to the handler function
 type HandlerPtr = usize;

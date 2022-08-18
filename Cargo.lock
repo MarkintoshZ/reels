@@ -75,9 +75,9 @@ checksum = "6c8af84674fe1f223a982c933a0ee1086ac4d4052aa0fb8060c12c6ad838e754"
 
 [[package]]
 name = "lunatic"
-version = "0.10.5"
+version = "0.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad43811f85a1cef61b7c5b0ccc9d5240d194f3fa72034596108d605b88113d6a"
+checksum = "dbb5cb5f8c3597fb08fdacc13ee41f24effbc0a1988262d122b5f52ecbef74ed"
 dependencies = [
  "bincode",
  "lunatic-macros",
@@ -149,10 +149,19 @@ dependencies = [
 name = "reels"
 version = "0.0.1"
 dependencies = [
+ "reels-core",
+ "reels-macros",
+ "reels-url-pattern",
+]
+
+[[package]]
+name = "reels-core"
+version = "0.0.1"
+dependencies = [
  "http",
  "httparse",
  "lunatic",
- "reels-macros",
+ "reels-url-pattern",
  "serde",
  "unicode-xid",
  "url",
@@ -162,21 +171,38 @@ dependencies = [
 [[package]]
 name = "reels-macros"
 version = "0.0.1"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "reels-url-pattern",
+ "syn",
+ "syn-mid",
+]
+
+[[package]]
+name = "reels-url-pattern"
+version = "0.0.1"
+dependencies = [
+ "serde",
+ "unicode-xid",
+ "url",
+ "urlencoding",
+]
 
 [[package]]
 name = "serde"
-version = "1.0.142"
+version = "1.0.143"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e590c437916fb6b221e1d00df6e3294f3fccd70ca7e92541c475d6ed6ef5fee2"
+checksum = "53e8e5d5b70924f74ff5c6d64d9a5acd91422117c60f48c4e07855238a254553"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.142"
+version = "1.0.143"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34b5b8d809babe02f538c2cfec6f2c1ed10804c0e5a6a041a049a4f5588ccc2e"
+checksum = "d3d8e8de557aee63c26b85b947f5e59b690d0454c753f3adeb5cd7835ab88391"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -192,6 +218,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "syn-mid"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "baa8e7560a164edb1621a55d18a0c59abf49d360f47aa7b821061dd7eea7fac9"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

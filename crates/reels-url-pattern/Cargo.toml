@@ -1,0 +1,13 @@
+[package]
+name = "reels-url-pattern"
+version = "0.0.1"
+edition = "2021"
+authors = ["Mark Zhang <markintoshzzz@gmail.com>"]
+description = "Url Pattern for Reels"
+license = "MIT"
+
+[dependencies]
+unicode-xid = "0.2.3"
+urlencoding = "2.1"
+url = "2.2"
+serde = { version = "1.0", features = ["derive"] }
