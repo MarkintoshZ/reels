@@ -67,6 +67,13 @@ fn expand(args: Args, func: ItemFn) -> TokenStream {
                         _ => return Err(reels_core::router::SegmentTypeMissmatch),
                     }
                 }
+            } else if ty_str == "Vec < & str >" {
+                quote! {
+                    match captures.next() {
+                        Some(SegmentPatternValue::WildcardKleene(v)) => v,
+                        _ => return Err(reels_core::router::SegmentTypeMissmatch),
+                    }
+                }
             } else {
                 quote! {
                     match captures.next() {
