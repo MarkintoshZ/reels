@@ -18,14 +18,12 @@ impl Router {
     }
 
     /// Mount a service or another router on the relative path
-    pub fn mount(
-        mut self,
-        method: Method,
-        url_pattern: &str,
-        handler: Handler,
-    ) -> Result<Self, InvalidUrlPattern> {
-        let route = DefaultRoute::new(method, url_pattern, handler)?;
-        self.routes.push(route);
+    pub fn mount(mut self, handler: Handler) -> Result<Self, InvalidUrlPattern> {
+        let (methods, url_pattern, handler_func) = handler();
+        for method in methods.into_iter() {
+            let route = DefaultRoute::new(method, url_pattern.try_into()?, handler_func);
+            self.routes.push(route);
+        }
         Ok(self)
     }
 
@@ -51,7 +49,7 @@ impl Router {
 }
 
 pub trait Route: Sized {
-    fn new(method: Method, url_pattern: &str, handler: Handler) -> Result<Self, InvalidUrlPattern>;
+    fn new(method: Method, url_pattern: UrlPattern, handler: HandlerFunc) -> Self;
     fn match_uri<'a>(&self, request: &'a HttpRequest) -> Option<PathCapture<'a>>;
     fn invoke<'a>(
         &self,
@@ -68,12 +66,12 @@ pub struct DefaultRoute {
 }
 
 impl Route for DefaultRoute {
-    fn new(method: Method, url_pattern: &str, handler: Handler) -> Result<Self, InvalidUrlPattern> {
-        Ok(Self {
+    fn new(method: Method, url_pattern: UrlPattern, handler: HandlerFunc) -> Self {
+        Self {
             method,
-            url_pattern: url_pattern.try_into()?,
+            url_pattern,
             handler: handler as *const () as usize,
-        })
+        }
     }
 
     fn match_uri<'a>(&self, request: &'a HttpRequest) -> Option<PathCapture<'a>> {
@@ -92,14 +90,17 @@ impl Route for DefaultRoute {
     ) -> Result<HttpResponse, SegmentTypeMissmatch> {
         let handler = unsafe {
             let pointer = self.handler as *const ();
-            mem::transmute::<*const (), Handler>(pointer)
+            mem::transmute::<*const (), HandlerFunc>(pointer)
         };
         handler(path_capture, request)
     }
 }
 
 /// Handler function
-pub type Handler = fn(PathCapture, &HttpRequest) -> Result<HttpResponse, SegmentTypeMissmatch>;
+pub type HandlerFunc = fn(PathCapture, &HttpRequest) -> Result<HttpResponse, SegmentTypeMissmatch>;
+
+/// Handler Trait
+pub type Handler = fn() -> (Vec<Method>, &'static str, HandlerFunc);
 
 #[derive(Debug)]
 pub struct SegmentTypeMissmatch;

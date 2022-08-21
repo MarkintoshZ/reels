@@ -124,6 +124,24 @@ impl TryFrom<&str> for UrlPattern {
     }
 }
 
+impl TryFrom<String> for UrlPattern {
+    type Error = InvalidUrlPattern;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        UrlPattern::parse(&value)
+    }
+}
+
+impl fmt::Display for UrlPattern {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for segment in &self.pattern {
+            write!(f, "/{}", segment)?
+        }
+
+        Ok(())
+    }
+}
+
 #[derive(Debug)]
 pub enum SegmentPatternValue<'a> {
     Wildcard(&'a str),
@@ -162,6 +180,16 @@ impl SegmentPattern {
     }
 }
 
+impl fmt::Display for SegmentPattern {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            SegmentPattern::Fixed(s) => f.write_str(s),
+            SegmentPattern::Wildcard(s) => write!(f, "<{}>", s),
+            SegmentPattern::WildcardKleene(s) => write!(f, "<{}..>", s),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Ident(String);
 
@@ -180,11 +208,23 @@ impl Ident {
     }
 }
 
+impl fmt::Display for Ident {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[lunatic::test]
+    #[test]
+    fn parsing_and_to_string() {
+        let pat: UrlPattern = "/a/<b>/<c..>".try_into().unwrap();
+        assert_eq!(pat.to_string(), "/a/<b>/<c..>");
+    }
+
+    #[test]
     fn parse_root() {
         let pat: UrlPattern = "/".try_into().unwrap();
         assert!(pat.match_str("/").is_some());
@@ -192,7 +232,7 @@ mod tests {
         assert!(pat.match_str("//").is_none());
     }
 
-    #[lunatic::test]
+    #[test]
     fn fixed_patterns() {
         let pat: UrlPattern = "/a/b/c".try_into().unwrap();
         assert!(pat.match_str("/a/b/c").is_some());
@@ -202,7 +242,7 @@ mod tests {
         assert!(pat.match_str("/").is_none());
     }
 
-    #[lunatic::test]
+    #[test]
     fn wildcard_patterns() {
         let pat: UrlPattern = "/a/b/<capture>".try_into().unwrap();
         assert!(pat.match_str("/a/b").is_none());
@@ -245,7 +285,7 @@ mod tests {
         }
     }
 
-    #[lunatic::test]
+    #[test]
     fn kleene_patterns() {
         let pat: UrlPattern = "/<capture..>".try_into().unwrap();
         let values = pat.match_str("/a/b/c").unwrap();
@@ -267,7 +307,7 @@ mod tests {
         }
     }
 
-    #[lunatic::test]
+    #[test]
     fn mixed_patterns() {
         let pat: UrlPattern = "/<capture..>".try_into().unwrap();
         let values = pat.match_str("/a/b/c").unwrap();

@@ -48,7 +48,7 @@ impl Server {
                                     .join("/")
                             );
                             let response = router.route(request);
-                            println!("{:#?}", &response);
+                            // println!("{:#?}", &response);
                             response.write(&mut buf_writer).unwrap();
                             println!("Response written");
                         }

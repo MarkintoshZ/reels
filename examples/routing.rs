@@ -1,12 +1,12 @@
 use reels::{
-    http::{HttpResponse, Method, StatusCode},
-    route,
+    get,
+    http::{HttpResponse, StatusCode},
     router::{Router, SegmentPatternValue},
     server::Server,
 };
 use std::error::Error;
 
-#[route("/")]
+#[get("/")]
 fn index() -> HttpResponse {
     HttpResponse::builder()
         .header(
@@ -18,7 +18,7 @@ fn index() -> HttpResponse {
 }
 
 /// Match on "/users/<uid>" where uid could be parsed into a u32
-#[route("/users/<uid>")]
+#[get("/users/<uid>")]
 fn user_uid(uid: u32) -> HttpResponse {
     HttpResponse::builder()
         .header(
@@ -30,7 +30,7 @@ fn user_uid(uid: u32) -> HttpResponse {
 }
 
 /// Match on "/users/<name>"
-#[route("/users/<name>")]
+#[get("/users/<name>")]
 fn user(name: &str) -> HttpResponse {
     HttpResponse::builder()
         .header(
@@ -42,7 +42,7 @@ fn user(name: &str) -> HttpResponse {
 }
 
 /// Match on any path and store the url segments into the segments argument
-#[route("/<segments..>")]
+#[get("/<segments..>")]
 fn fallback(segments: Vec<&str>) -> HttpResponse {
     HttpResponse::builder()
         .status(StatusCode::NOT_FOUND)
@@ -62,10 +62,10 @@ fn fallback(segments: Vec<&str>) -> HttpResponse {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let router = Router::new()
-        .mount(Method::GET, "/users/<uid>", user_uid)?
-        .mount(Method::GET, "/users/<name>", user)?
-        .mount(Method::GET, "/", index)?
-        .mount(Method::GET, "/<segments..>", fallback)?;
+        .mount(user_uid)?
+        .mount(user)?
+        .mount(index)?
+        .mount(fallback)?;
     let server = Server::new(router).bind("127.0.0.1:8080".parse().unwrap());
     println!("Listening on http://127.0.0.1:8080");
     server.start();

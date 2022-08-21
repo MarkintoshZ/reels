@@ -1,6 +1,24 @@
-use serde::{Deserialize, Serialize};
+use reels_url_pattern::UrlPattern;
+use syn::parse::{Parse, ParseStream};
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Hash)]
+pub struct Args {
+    pub methods: Vec<String>,
+    pub url: UrlPattern,
+}
+
+impl Parse for Args {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let path: syn::LitStr = input.parse()?;
+        let url = UrlPattern::parse(&path.value())
+            .map_err(|e| syn::Error::new(path.span(), format!("Not a valid url pattern {}", e)))?;
+        Ok(Self {
+            methods: Vec::new(),
+            url,
+        })
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub enum Method {
     Get,
     Put,
