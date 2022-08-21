@@ -100,7 +100,6 @@ fn expand(args: Args, func: ItemFn) -> TokenStream {
             ))
         }
     };
-    println!("{}", output);
     output.into()
 }
 

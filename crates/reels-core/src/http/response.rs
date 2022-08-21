@@ -71,6 +71,11 @@ impl HttpResponseBuilder {
         self
     }
 
+    pub fn body_bytes(mut self, content: Vec<u8>) -> Self {
+        self.body = content;
+        self
+    }
+
     pub fn finalize(mut self) -> HttpResponse {
         let n = self.body.len();
         self.headers
