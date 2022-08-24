@@ -1,6 +1,6 @@
 use reels::{
     get,
-    http::{HttpResponse, Method, StatusCode},
+    http::{HttpResponse, StatusCode},
     router::{Router, SegmentPatternValue},
     server::Server,
 };
@@ -23,7 +23,7 @@ fn handler(path: Vec<&str>) -> HttpResponse {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let router = Router::new().mount(handler)?;
-    let server = Server::new(router).bind("127.0.0.1:8080".parse().unwrap());
+    let server = Server::new(router).bind("127.0.0.1:8080")?;
     println!("Listening on http://127.0.0.1:8080");
     server.start();
     Ok(())

@@ -1,5 +1,5 @@
-use lunatic::{net, Mailbox, Process};
-use std::io::{BufReader, BufWriter};
+use lunatic::{net, net::ToSocketAddrs, Mailbox, Process};
+use std::io::{self, BufReader, BufWriter};
 use std::net::SocketAddr;
 
 use crate::http::HttpRequest;
@@ -18,9 +18,9 @@ impl Server {
         }
     }
 
-    pub fn bind(mut self, address: SocketAddr) -> Self {
-        self.address = Some(address);
-        self
+    pub fn bind<S: ToSocketAddrs>(mut self, address: S) -> io::Result<Self> {
+        self.address = Some(address.to_socket_addrs()?.next().unwrap());
+        Ok(self)
     }
 
     pub fn start(self) {

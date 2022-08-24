@@ -66,7 +66,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .mount(user)?
         .mount(index)?
         .mount(fallback)?;
-    let server = Server::new(router).bind("127.0.0.1:8080".parse().unwrap());
+    let server = Server::new(router).bind("127.0.0.1:8080")?;
     println!("Listening on http://127.0.0.1:8080");
     server.start();
     Ok(())

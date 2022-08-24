@@ -40,7 +40,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .mount(user_uid)?
         .mount(user)?
     Server::new(router)
-        .bind("127.0.0.1:8080".parse().unwrap());
+        .bind("127.0.0.1:8080")?;
         .start();
     Ok(())
 }
