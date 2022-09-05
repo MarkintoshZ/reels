@@ -1,10 +1,10 @@
 # Reels
 
-An experimental web framework for [Lunatic](https://github.com/lunatic-solutions/lunatic)
+An simple http library for [Lunatic](https://github.com/lunatic-solutions/lunatic)
 
 ## Goal
 
-The current goal of the project is to build a reliable web framework for prototyping other projects (e.g. a multiplayer game server).
+This is a project for me to learn more about building http library in rust. If you are looking for more sophisticated solutions, check out the official web framework by lunatic [submillisecond](https://github.com/lunatic-solutions/submillisecond) and the experimental http library [Puck](https://github.com/puck-rs/puck) that is inspired by Phoenix Liveview.
 
 ## Example
 
