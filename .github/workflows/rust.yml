@@ -10,13 +10,27 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-
+  test:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v3
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+      - name: "Check out repository"
+        uses: actions/checkout@v3
+      # Rust builds can take some time, cache them.
+      - uses: Swatinem/rust-cache@v2
+      - name: "Install lunatic"
+        run: cargo install --git https://github.com/lunatic-solutions/lunatic lunatic-runtime
+      - name: Install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: wasm32-wasi
+          override: true
+          components: rustfmt, clippy
+      - name: "Run build"
+        run: cargo build --verbose
+      - name: "Run tests"
+        run: cargo test --workspace
+      - name: "Run clippy"
+        run: cargo clippy -- -D warnings
+      - name: "Check formatting"
+        run: cargo fmt -- --check
