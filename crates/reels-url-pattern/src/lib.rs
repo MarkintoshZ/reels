@@ -53,7 +53,7 @@ impl UrlPattern {
     pub fn parse(s: &str) -> Result<Self, InvalidUrlPattern> {
         let mut segments = s.split('/');
         (segments.next() == Some(""))
-            .then(|| 0)
+            .then_some(0)
             .ok_or(InvalidUrlPattern::MissingForwardSlash)?;
 
         let mut patterns = Vec::new();
@@ -86,7 +86,7 @@ impl UrlPattern {
     {
         let mut patterns = self.pattern.iter();
         let mut matched_values = Vec::new();
-        while let Some(pattern) = patterns.next() {
+        for pattern in patterns {
             match pattern {
                 SegmentPattern::Fixed(pat) => {
                     let segment = segments.next()?;
@@ -100,7 +100,7 @@ impl UrlPattern {
                     matched_values.push(SegmentPatternValue::Wildcard(segment));
                 }
                 SegmentPattern::WildcardKleene(_) => {
-                    let segments = segments.map(|s| s).collect();
+                    let segments = segments.collect();
                     matched_values.push(SegmentPatternValue::WildcardKleene(segments));
                     return Some(matched_values);
                 }
