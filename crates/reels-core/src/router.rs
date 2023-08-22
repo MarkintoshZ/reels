@@ -1,5 +1,5 @@
-pub use reels_url_pattern::{PathCapture, SegmentPattern, SegmentPatternValue, UrlPattern};
 use crate::http::{HttpRequest, HttpResponse, Method};
+pub use reels_url_pattern::{PathCapture, SegmentPattern, SegmentPatternValue, UrlPattern};
 use serde::{Deserialize, Serialize};
 use std::mem;
 

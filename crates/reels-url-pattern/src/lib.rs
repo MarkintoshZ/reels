@@ -84,7 +84,7 @@ impl UrlPattern {
     where
         I: Iterator<Item = &'a str>,
     {
-        let mut patterns = self.pattern.iter();
+        let patterns = self.pattern.iter();
         let mut matched_values = Vec::new();
         for pattern in patterns {
             match pattern {
@@ -200,7 +200,7 @@ impl Ident {
         if start != '_' && !UnicodeXID::is_xid_start(start) {
             return Err(());
         }
-        if chars.all(|c| UnicodeXID::is_xid_continue(c)) {
+        if chars.all(UnicodeXID::is_xid_continue) {
             Ok(Ident(s.to_owned()))
         } else {
             Err(())
