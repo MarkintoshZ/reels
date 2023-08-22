@@ -1,5 +1,5 @@
+pub use reels_url_pattern::{PathCapture, SegmentPattern, SegmentPatternValue, UrlPattern};
 use crate::http::{HttpRequest, HttpResponse, Method};
-use crate::router::{PathCapture, UrlPattern};
 use serde::{Deserialize, Serialize};
 use std::mem;
 
@@ -51,7 +51,7 @@ impl Router {
 pub trait Route: Sized {
     fn new(method: Method, url_pattern: UrlPattern, handler: HandlerFunc) -> Self;
     fn match_uri<'a>(&self, request: &'a HttpRequest) -> Option<PathCapture<'a>>;
-    fn invoke<'a>(
+    fn invoke(
         &self,
         path_capture: PathCapture,
         request: &HttpRequest,

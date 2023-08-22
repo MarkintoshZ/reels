@@ -58,7 +58,7 @@ impl HttpRequest {
         let version: Version = req.version.unwrap().try_into().unwrap();
         let headers: HashMap<String, String> = req
             .headers
-            .into_iter()
+            .iter_mut()
             .map(|h| {
                 (
                     h.name.to_ascii_lowercase().to_owned(),
